@@ -14,19 +14,36 @@ SYSTEM_PROMPT = "You are a psychological AI assistant named Віра that analyz
 async def wscaht(websocket: WebSocket, ai: Anthropic = Depends(get_ai)):
     await websocket.accept()
     chat_log = []
+    i = 0       # Index of answer
+    limit = 3   # Maximum number of answers
     while True:
+        i += 1
         recieved = await websocket.receive_json()
         if not recieved["role"] == "user":
             await websocket.close()
             return
-        chat_log.append({"role": "user", "content": recieved["text"]})
+        content = recieved['text']
+        if i == limit - 1:
+            content = content + ". Постав останнє питання. Після відповіді нових питань не став, подякуй мені за відповіді та повідом, що ти сформуєш звіт та відправиш його на опрацювання професійним психологам."
+        
+
+        chat_log.append({"role": "user", "content": content})
         msg_buf = ""
-        print(chat_log)
         with ai.messages.stream(max_tokens=1024, messages=chat_log, model="claude-3-haiku-20240307", system=SYSTEM_PROMPT) as stream:
             for text in stream.text_stream:
                 msg_buf += text
                 await websocket.send_json({"role": "part", "text": text})
         chat_log.append({"role": "assistant", "content": msg_buf})
+        
+        if i == limit:
+            content = content + ". Жодних запитань більше не став. Сформуй звіт для психологів. Надішли мені сухий звіт"
+            chat_log.append({"role": "user", "content": content})
+            with ai.messages.stream(max_tokens=1024, messages=chat_log, model="claude-3-haiku-20240307", system=SYSTEM_PROMPT) as stream:
+                for text in stream.text_stream:
+                    msg_buf += text
+                await websocket.send_json({"role": "end", "text": msg_buf})
+            break
         await websocket.send_json({"role": "finished", "text": msg_buf})
-
+    
+   
     return {"ok": True}
