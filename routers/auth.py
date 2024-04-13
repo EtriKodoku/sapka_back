@@ -1,3 +1,4 @@
+import time
 import jwt
 from fastapi import APIRouter, Request
 from db import get_db
@@ -12,6 +13,7 @@ def login(request: Request, link_format: str, user: LoginUser):
     
     token = {}
     token["username"] = user.email.split("@")[0]
+    token["exp"] = time.time() + (60*10) # seconds * minutes
     encoded_jwt = jwt.encode(token, CONFIG.jwt_secret.get_secret_value(), algorithm="HS256")
 
     msg = make_message(link_format, encoded_jwt)
@@ -23,6 +25,8 @@ def login(request: Request, link_format: str, user: LoginUser):
 def user(request: Request, key: str):
     try:
         token = jwt.decode(key, CONFIG.jwt_secret.get_secret_value(), algorithms=["HS256"])
-        return {"success": True, "username": token["username"]}
+        if time.time() < token["exp"]:
+            return {"success": True, "username": token["username"]}
+        else: raise Exception
     except:
         return {"success": False, "username": None}
