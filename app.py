@@ -1,11 +1,12 @@
 from fastapi import FastAPI
 from config import CONFIG
-from routers import router
+from routers import auth, ai
 from fastsession import FastSessionMiddleware, MemoryStore
 
 app = FastAPI(debug=CONFIG.DEBUG)
 
-app.include_router(router)
+app.include_router(auth.router)
+app.include_router(ai.router)
 
 app.add_middleware(FastSessionMiddleware,
                    secret_key="my-secret-key",  # Key for cookie signature
