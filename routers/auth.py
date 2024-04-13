@@ -1,15 +1,11 @@
-import secrets
-from mail import make_message, send_conf_mail_to
+import jwt
+from fastapi import APIRouter, Request
 from db import get_db
 from config import CONFIG
-from models import LoginUser, ValidToken
-from fastapi import APIRouter, Depends, Request, HTTPException 
-from pymongo import MongoClient
-import jwt
-            
-
+from models import LoginUser
+from mail import make_message, send_conf_mail_to
+          
 router = APIRouter(prefix="/auth")
-
 
 @router.post('/login')
 def login(request: Request, link_format: str, user: LoginUser):
@@ -30,8 +26,3 @@ def user(request: Request, key: str):
         return {"success": True, "username": token["username"]}
     except:
         return {"success": False, "username": None}
-    # session_mgr = request.state.session
-    # session = session_mgr.get_session()
-    # token = session.get("token", None)
-    # session["is_authenticated"] = True  -- При успіху
-
