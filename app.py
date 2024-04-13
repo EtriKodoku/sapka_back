@@ -2,6 +2,7 @@ from fastapi import FastAPI
 from config import CONFIG
 from routers import auth, ai
 from fastsession import FastSessionMiddleware, MemoryStore
+from fastapi.middleware.cors import CORSMiddleware
 
 app = FastAPI(debug=CONFIG.DEBUG)
 
@@ -18,3 +19,12 @@ app.add_middleware(FastSessionMiddleware,
                    session_cookie="sid",  # Name of the session cookie
                    session_object="session"  # Attribute name of the Session manager under request.state
 )
+
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["*"],
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
+

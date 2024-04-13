@@ -4,7 +4,7 @@ from config import CONFIG
 resend.api_key = CONFIG.resend_connection.get_secret_value()
 
 
-template = "Вітаємо, я Віра, ваш помічник. Для авторизації перейдіть за посиланням {link}"
+template = 'Вітаємо, я Віра, ваш помічник. Для авторизації перейдіть <a href="{link}">за цим посиланням</a>'
 
 
 def make_message(link, key):
