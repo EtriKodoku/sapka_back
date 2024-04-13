@@ -20,14 +20,13 @@ def login(request: Request, link_format: str, user: LoginUser):
 
     msg = make_message(link_format, encoded_jwt)
     sent = send_conf_mail_to(user.email, msg)
-    return {"success": msg}
+    return {"success": sent}
 
 
 @router.get("/user")
 def user(request: Request, key: str):
     try:
         token = jwt.decode(key, CONFIG.jwt_secret.get_secret_value(), algorithms=["HS256"])
-        validated_token = ValidToken.parse_obj(token)
         return {"success": True, "username": token["username"]}
     except:
         return {"success": False, "username": None}
