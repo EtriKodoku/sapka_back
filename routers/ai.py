@@ -21,7 +21,7 @@ async def wscaht(websocket: WebSocket, ai: Anthropic = Depends(get_ai)):
             return
         chat_log.append({"role": "user", "content": recieved["text"]})
         msg_buf = ""
-        with ai.messages.stream(max_tokens=1024, messages=chat_log, model="claude-3-sonnet-20240229", system=SYSTEM_PROMPT as stream:
+        with ai.messages.stream(max_tokens=1024, messages=chat_log, model="claude-3-sonnet-20240229", system=SYSTEM_PROMPT) as stream:
             for text in stream.text_stream:
                 msg_buf += text
                 await websocket.send_json({"role": "part", "text": text})
