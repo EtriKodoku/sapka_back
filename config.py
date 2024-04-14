@@ -7,6 +7,8 @@ class Settings(BaseSettings):
     resend_connection: SecretStr
     claude_connection: SecretStr
     jwt_secret: SecretStr
+    ssl_certfile: str|None = None
+    ssl_keyfile: str|None = None
     
     model_config = SettingsConfigDict(env_file=".env")
 
