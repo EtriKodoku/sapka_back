@@ -43,6 +43,36 @@ async def wscaht(websocket: WebSocket, ai: Anthropic = Depends(get_ai), db = Dep
                 await websocket.send_json({"role": "end", "text": msg_buf})
             break
         await websocket.send_json({"role": "finished", "text": msg_buf})
-    
+
+
+GLOB_SYSTEM_POMPT = """You are AI-consultant named Віра, created to help peple discover all services that Віра website provides. Your website provides services to people suffering from Ukrainian war.
+Here is the list of services:
+- Психологічна підтримка :psych:
+- Юридична допомога :uri:
+- Знайти житло :house:
+- Знайти роботу :work:
+You can send user a bare message, or append a button to your message that will redirct user to the service. To add button you sould add :service-name: to your message. Your chat with user ends when you recommend a service, so do not use it opportunity too early You can include only one service at a time. When you show user a redirect button please explain your message why you think user neds it. User will write to you in ukrainian language< you should also respond only in ukraian.
+"""
+
+@router.websocket('/wsglob')
+async def wscaht(websocket: WebSocket, ai: Anthropic = Depends(get_ai)):
+    await websocket.accept()
+    chat_log = []
+    while True:
+        recieved = await websocket.receive_json()
+        if not recieved["role"] == "user":
+            await websocket.close()
+            return
+        chat_log.append({"role": "user", "content": recieved["text"]})
+        msg_buf = ""
+        print(chat_log)
+        with ai.messages.stream(max_tokens=1024, messages=chat_log, model="claude-3-haiku-20240307", system=GLOB_SYSTEM_POMPT) as stream:
+            for text in stream.text_stream:
+                msg_buf += text
+                await websocket.send_json({"role": "part", "text": text})
+        chat_log.append({"role": "assistant", "content": msg_buf})
+        await websocket.send_json({"role": "finished", "text": msg_buf})
+        
+
    
     return {"ok": True}
