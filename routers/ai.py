@@ -13,7 +13,7 @@ async def wscaht(websocket: WebSocket, ai: Anthropic = Depends(get_ai), db = Dep
     await websocket.accept()
     chat_log = []
     i = 0       # Index of answer
-    limit = 3   # Maximum number of answers
+    limit = 5   # Maximum number of answers
     while True:
         i += 1
         recieved = await websocket.receive_json()
