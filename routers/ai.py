@@ -13,7 +13,7 @@ async def wscaht(websocket: WebSocket, ai: Anthropic = Depends(get_ai), db = Dep
     await websocket.accept()
     chat_log = []
     i = 0       # Index of answer
-    limit = 1   # Maximum number of answers
+    limit = 5   # Maximum number of answers
     while True:
         i += 1
         recieved = await websocket.receive_json()
@@ -34,13 +34,14 @@ async def wscaht(websocket: WebSocket, ai: Anthropic = Depends(get_ai), db = Dep
         chat_log.append({"role": "assistant", "content": msg_buf})
 
         if i == limit:
+            msg_buf = ""
             content = content + ". Жодних запитань більше не став. Сформуй звіт для психологів. Надішли мені сухий звіт"
             chat_log.append({"role": "user", "content": content})
             with ai.messages.stream(max_tokens=1024, messages=chat_log, model="claude-3-haiku-20240307", system=SYSTEM_PROMPT) as stream:
                 for text in stream.text_stream:
                     msg_buf += text
-                print(db.сodecon.reports.insert_one({'text': text, 'rep_type':'Psych'}))
-                await websocket.send_json({"role": "end", "text": msg_buf})
+                rep_id = db.сodecon.reports.insert_one({'text': msg_buf, 'rep_type':'Psych'}).inserted_id
+                await websocket.send_json({"role": "end", "text": rep_id})
             break
         await websocket.send_json({"role": "finished", "text": msg_buf})
 
