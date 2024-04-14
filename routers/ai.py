@@ -32,8 +32,10 @@ async def wscaht(websocket: WebSocket, ai: Anthropic = Depends(get_ai), db = Dep
                 msg_buf += text
                 await websocket.send_json({"role": "part", "text": text})
         chat_log.append({"role": "assistant", "content": msg_buf})
-
+        
+        await websocket.send_json({"role": "finished", "text": msg_buf})
         if i == limit:
+            await websocket.send_json({"role": "lock", "text": ""})
             report = ""
             content = content + ". Жодних запитань більше не став. Тепер ти припиняєш розмову з користувачем. Сформуй звіт для спеціалістів. Надай в повідомленні інформацію лише про стан чи проблему користувача"
             chat_log.append({"role": "user", "content": content})
@@ -41,10 +43,9 @@ async def wscaht(websocket: WebSocket, ai: Anthropic = Depends(get_ai), db = Dep
             with ai.messages.stream(max_tokens=1024, messages=chat_log, model="claude-3-haiku-20240307", system=SYSTEM_PROMPT) as stream:
                 for text in stream.text_stream:
                     report += text
-                rep_id = str(db.сodecon.reports.insert_one({'text': report, 'rep_type':'Psych'}).inserted_id)
+                rep_id = str(db["codecon"].reports.insert_one({'text': report, 'rep_type':'Psych'}).inserted_id)
                 await websocket.send_json({"role": "end", "text": rep_id})
             break
-        await websocket.send_json({"role": "finished", "text": msg_buf})
 
 
 GLOB_SYSTEM_POMPT = """You are AI-consultant named Віра, created to help peple discover all services that Віра website provides. Your website provides services to people suffering from Ukrainian war.

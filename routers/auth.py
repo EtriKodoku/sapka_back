@@ -3,7 +3,9 @@ import jwt
 from fastapi import APIRouter, Request, Depends
 from db import get_db
 from config import CONFIG
+from bson.objectid import ObjectId
 from models import LoginUser
+from pymongo import MongoClient
 from mail import make_message, send_conf_mail_to
           
 router = APIRouter(prefix="/auth")
@@ -23,12 +25,16 @@ def login(request: Request, link_format: str, user: LoginUser):
 
 
 @router.get("/user")
-def user(request: Request, key: str, db = Depends(get_db)):
+def user(request: Request, key: str, db: MongoClient = Depends(get_db)):
     try:
         token = jwt.decode(key, CONFIG.jwt_secret.get_secret_value(), algorithms=["HS256"])
-        report = db.codecon.reports.find_one(id=token['rid'])
+        codecon = db["codecon"]
+        reports = codecon["reports"]
+        report = reports.find_one(ObjectId(token["rid"]))
+        print(report)
         if time.time() < token["exp"]:
             return {"success": True, "username": token["username"], "type": report["rep_type"]}
         else: raise Exception
-    except:
+    except Exception as E:
+        print("EXCEPTION:", E)
         return {"success": False, "username": None}
