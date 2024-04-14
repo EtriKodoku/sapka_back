@@ -2,6 +2,7 @@ from pydantic import BaseModel, Extra
 
 class LoginUser(BaseModel):
     email: str
+    rid: str
 
     class Config:
         orm_mode = True
