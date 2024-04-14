@@ -37,7 +37,7 @@ async def wscaht(websocket: WebSocket, ai: Anthropic = Depends(get_ai), db = Dep
         if i == limit:
             await websocket.send_json({"role": "lock", "text": ""})
             report = ""
-            content = content + ". Жодних запитань більше не став. Сформуй звіт для спеціалістів. Надай в повідомленні інформацію лише про стан чи проблему користувача"
+            content = content + ". Жодних запитань більше не став. Тепер ти припиняєш розмову з користувачем. Сформуй звіт для спеціалістів. Надай в повідомленні інформацію лише про стан чи проблему користувача"
             chat_log.append({"role": "user", "content": content})
             
             with ai.messages.stream(max_tokens=1024, messages=chat_log, model="claude-3-haiku-20240307", system=SYSTEM_PROMPT) as stream:
@@ -110,7 +110,7 @@ async def wscaht(websocket: WebSocket, ai: Anthropic = Depends(get_ai), db = Dep
 
         if i == limit:
             report = ""
-            content = content + ". Жодних запитань більше не став. Сформуй звіт для спеціалістів. Надай в повідомленні інформацію лише про стан чи проблему користувача"
+            content = content + ". Жодних запитань більше не став. Тепер ти припиняєш розмову з користувачем. Сформуй звіт для спеціалістів. Надай в повідомленні інформацію лише про стан чи проблему користувача"
             chat_log.append({"role": "user", "content": content})
             
             with ai.messages.stream(max_tokens=1024, messages=chat_log, model="claude-3-haiku-20240307", system=SYSTEM_PROMPT) as stream:
